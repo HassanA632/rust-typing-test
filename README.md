@@ -1,0 +1,1 @@
+# rust-typing-test
