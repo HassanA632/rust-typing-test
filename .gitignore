@@ -22,5 +22,7 @@ target
 
 
 # Added by cargo
-
 /target
+
+# Trunk (WASM web build output)
+dist/
