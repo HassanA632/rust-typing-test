@@ -1,11 +1,14 @@
 mod app;
+mod screens;
 
+// The same app can run natively (desktop) or in the browser (WASM).
+// `#[cfg(...)]` selects the correct startup path at compile time.
 fn main() {
     #[cfg(not(target_arch = "wasm32"))]
     {
         let options = eframe::NativeOptions::default();
         eframe::run_native(
-            "Rust Typing Test",
+            "Typing Test",
             options,
             Box::new(|cc| Ok(Box::new(app::TypingApp::new(cc)))),
         )
