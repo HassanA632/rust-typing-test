@@ -1,4 +1,4 @@
-use egui::{Key, Ui};
+use egui::{Key, TextEdit, Ui};
 
 use crate::app::Screen;
 use crate::core::{
@@ -19,17 +19,31 @@ pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
 
     ui.add_space(8.0);
 
-    // Text input
-    let response = ui.text_edit_singleline(&mut s.input);
+    ui.add_space(8.0);
 
-    // Start timer on first keystroke (when input changes)
-    if response.changed() && s.state == TestState::Waiting {
+    // Fixed message line (prevents layout jumping)
+    let msg = s.last_feedback.as_deref().unwrap_or("");
+    ui.label(msg);
+
+    // Input + stay focused
+    let input_id = ui.id().with("typing_input");
+    let response = ui.add(TextEdit::singleline(&mut s.input).id(input_id));
+    response.request_focus();
+
+    // Prevent spaces inside the input box
+    if s.input.contains(' ') {
+        s.input = s.input.replace(' ', "");
+    }
+
+    // Start timer on first real input
+    if response.changed() && s.state == TestState::Waiting && !s.input.is_empty() {
         s.on_first_input_if_needed();
     }
 
-    // Submit word on space or enter
-    if ui.input(|i| i.key_pressed(Key::Space) || i.key_pressed(Key::Enter)) {
-        s.submit_current_word();
+    // Submit only when the input is focused
+    let input_has_focus = ui.ctx().memory(|m| m.has_focus(input_id));
+    if input_has_focus && ui.input(|i| i.key_pressed(Key::Space) || i.key_pressed(Key::Enter)) {
+        s.attempt_submit_current_word();
     }
 
     ui.add_space(8.0);

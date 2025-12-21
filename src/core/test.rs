@@ -15,6 +15,7 @@ pub struct TestSession {
     pub started_at: Option<Instant>,
     pub finished_at: Option<Instant>,
     pub correct_words: usize,
+    pub last_feedback: Option<String>,
 }
 
 impl TestSession {
@@ -27,6 +28,7 @@ impl TestSession {
             started_at: None,
             finished_at: None,
             correct_words: 0,
+            last_feedback: None,
         }
     }
 
@@ -50,27 +52,37 @@ impl TestSession {
         }
     }
 
-    pub fn submit_current_word(&mut self) {
-        if self.state == TestState::Waiting {
-            return;
-        }
-        if self.state == TestState::Finished {
-            return;
+    pub fn attempt_submit_current_word(&mut self) -> bool {
+        if self.state == TestState::Waiting || self.state == TestState::Finished {
+            return false;
         }
 
         let expected = self.expected_word().unwrap_or("");
         let typed = self.input.trim();
 
-        if typed == expected {
-            self.correct_words += 1;
+        // Don't allow submitting empty (prevents accidental space spam)
+        if typed.is_empty() {
+            self.last_feedback = Some("Type the word above".to_string());
+            return false;
         }
 
-        self.input.clear();
-        self.current_index += 1;
+        if typed == expected {
+            self.correct_words += 1;
+            self.last_feedback = None;
 
-        if self.current_index >= self.words.len() {
-            self.state = TestState::Finished;
-            self.finished_at = Some(Instant::now());
+            self.input.clear();
+            self.current_index += 1;
+
+            if self.current_index >= self.words.len() {
+                self.state = TestState::Finished;
+                self.finished_at = Some(Instant::now());
+            }
+            true
+        } else {
+            // Wrong: reset input and force retry
+            self.last_feedback = Some("Try again".to_string());
+            self.input.clear();
+            false
         }
     }
 
