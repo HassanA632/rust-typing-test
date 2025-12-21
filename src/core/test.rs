@@ -1,4 +1,5 @@
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use web_time::Instant;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TestState {
@@ -16,6 +17,7 @@ pub struct TestSession {
     pub finished_at: Option<Instant>,
     pub correct_words: usize,
     pub last_feedback: Option<String>,
+    pub should_focus_input: bool,
 }
 
 impl TestSession {
@@ -29,6 +31,7 @@ impl TestSession {
             finished_at: None,
             correct_words: 0,
             last_feedback: None,
+            should_focus_input: true,
         }
     }
 

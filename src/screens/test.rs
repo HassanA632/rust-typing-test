@@ -19,18 +19,20 @@ pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
 
     ui.add_space(8.0);
 
-    ui.add_space(8.0);
-
     // Fixed message line (prevents layout jumping)
     let msg = s.last_feedback.as_deref().unwrap_or("");
     ui.label(msg);
 
-    // Input + stay focused
-    let input_id = ui.id().with("typing_input");
+    // Input with stable id + focus once
+    let input_id = egui::Id::new("typing_input");
     let response = ui.add(TextEdit::singleline(&mut s.input).id(input_id));
-    response.request_focus();
 
-    // Prevent spaces inside the input box
+    if s.should_focus_input {
+        response.request_focus();
+        s.should_focus_input = false;
+    }
+
+    // Prevent spaces inside the input box (spaces are used to submit)
     if s.input.contains(' ') {
         s.input = s.input.replace(' ', "");
     }
@@ -41,8 +43,7 @@ pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
     }
 
     // Submit only when the input is focused
-    let input_has_focus = ui.ctx().memory(|m| m.has_focus(input_id));
-    if input_has_focus && ui.input(|i| i.key_pressed(Key::Space) || i.key_pressed(Key::Enter)) {
+    if response.has_focus() && ui.input(|i| i.key_pressed(Key::Space)) {
         s.attempt_submit_current_word();
     }
 

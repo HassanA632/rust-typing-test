@@ -6,10 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <base data-trunk-public-url />
     <title>Rust Typing Test</title>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            /* prevents scrollbars/cutoff */
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            outline: none;
+        }
+    </style>
 </head>
 
 <body>
-    <canvas id="the_canvas_id"></canvas>
+    <canvas id="the_canvas_id" tabindex="1"></canvas>
     <link data-trunk rel="rust" />
 </body>
 
