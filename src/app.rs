@@ -6,6 +6,7 @@
 //!
 use crate::core::settings::{Settings, Theme};
 use crate::core::storage;
+use crate::core::test::TestSession;
 
 pub enum Screen {
     Menu,
@@ -17,6 +18,7 @@ pub enum Screen {
 pub struct TypingApp {
     screen: Screen,
     settings: Settings,
+    test: Option<TestSession>,
 }
 
 impl TypingApp {
@@ -25,6 +27,7 @@ impl TypingApp {
         Self {
             screen: Screen::Menu,
             settings,
+            test: None,
         }
     }
 }
@@ -45,7 +48,7 @@ impl eframe::App for TypingApp {
 
         egui::CentralPanel::default().show(ctx, |ui| match self.screen {
             Screen::Menu => crate::screens::menu::ui(ui, &mut self.screen),
-            Screen::Test => crate::screens::test::ui(ui, &mut self.screen),
+            Screen::Test => crate::screens::test::ui(ui, &mut self.screen, &mut self.test),
             Screen::History => crate::screens::history::ui(ui, &mut self.screen),
             Screen::Options => {
                 crate::screens::options::ui(ui, &mut self.screen, &mut self.settings)
