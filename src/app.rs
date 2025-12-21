@@ -3,6 +3,9 @@
 //! This file holds the top-level state machine (`Screen`) and the root `eframe::App`
 //! implementation. Individual screen UIs live in `src/screens/*` so the UI code stays
 //! modular while sharing a single app state.
+//!
+use crate::core::settings::{Settings, Theme};
+use crate::core::storage;
 
 pub enum Screen {
     Menu,
@@ -13,23 +16,40 @@ pub enum Screen {
 
 pub struct TypingApp {
     screen: Screen,
+    settings: Settings,
 }
 
 impl TypingApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+        let settings = storage::load_settings();
         Self {
             screen: Screen::Menu,
+            settings,
         }
     }
 }
 
 impl eframe::App for TypingApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Apply theme + font sizing every frame.
+        match self.settings.theme {
+            Theme::Light => ctx.set_visuals(egui::Visuals::light()),
+            Theme::Dark => ctx.set_visuals(egui::Visuals::dark()),
+        }
+
+        let mut style = (*ctx.style()).clone();
+        style.text_styles.iter_mut().for_each(|(_, font)| {
+            font.size = self.settings.text_size.points();
+        });
+        ctx.set_style(style);
+
         egui::CentralPanel::default().show(ctx, |ui| match self.screen {
             Screen::Menu => crate::screens::menu::ui(ui, &mut self.screen),
             Screen::Test => crate::screens::test::ui(ui, &mut self.screen),
             Screen::History => crate::screens::history::ui(ui, &mut self.screen),
-            Screen::Options => crate::screens::options::ui(ui, &mut self.screen),
+            Screen::Options => {
+                crate::screens::options::ui(ui, &mut self.screen, &mut self.settings)
+            }
         });
     }
 }

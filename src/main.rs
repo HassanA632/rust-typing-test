@@ -1,4 +1,5 @@
 mod app;
+mod core;
 mod screens;
 
 // The same app can run natively (desktop) or in the browser (WASM).
