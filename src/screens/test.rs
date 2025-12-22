@@ -70,8 +70,15 @@ pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
 
     ui.separator();
 
-    if ui.button("Exit").clicked() {
-        *screen = Screen::Menu;
-        *session = None;
-    }
+    ui.horizontal(|ui| {
+        if ui.button("Restart").clicked() {
+            *session = None; // drop current run and create new session
+            return;
+        }
+
+        if ui.button("Exit").clicked() {
+            *screen = Screen::Menu;
+            *session = None;
+        }
+    });
 }
