@@ -1,4 +1,5 @@
-use egui::{Key, TextEdit, Ui};
+use egui::text::LayoutJob;
+use egui::{Align, Color32, FontId, Key, TextEdit, TextFormat, TextStyle, Ui};
 
 use crate::app::Screen;
 use crate::core::{
@@ -12,9 +13,51 @@ pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
     ui.heading("Typing Test");
     ui.separator();
 
-    // Preview next words
-    let preview = s.next_preview(6).join(" ");
-    ui.label(preview);
+    // Preview next 6 words
+    let preview_words = s.next_preview(6);
+
+    let base_size = ui
+        .style()
+        .text_styles
+        .get(&TextStyle::Body)
+        .map(|f| f.size)
+        .unwrap_or(18.0);
+
+    let preview_size = base_size + 8.0;
+
+    let mut job = LayoutJob::default();
+    job.halign = Align::Center;
+
+    for (i, w) in preview_words.iter().enumerate() {
+        if i > 0 {
+            job.append(
+                " ",
+                0.0,
+                TextFormat {
+                    font_id: FontId::proportional(preview_size),
+                    ..Default::default()
+                },
+            );
+        }
+
+        let color = if i == 0 {
+            Color32::from_rgb(80, 200, 120)
+        } else {
+            ui.visuals().text_color()
+        };
+
+        job.append(
+            w,
+            0.0,
+            TextFormat {
+                font_id: FontId::proportional(preview_size),
+                color,
+                ..Default::default()
+            },
+        );
+    }
+
+    ui.label(job);
 
     ui.add_space(8.0);
 
