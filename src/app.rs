@@ -46,13 +46,25 @@ impl eframe::App for TypingApp {
         });
         ctx.set_style(style);
 
-        egui::CentralPanel::default().show(ctx, |ui| match self.screen {
-            Screen::Menu => crate::screens::menu::ui(ui, &mut self.screen),
-            Screen::Test => crate::screens::test::ui(ui, &mut self.screen, &mut self.test),
-            Screen::History => crate::screens::history::ui(ui, &mut self.screen),
-            Screen::Options => {
-                crate::screens::options::ui(ui, &mut self.screen, &mut self.settings)
-            }
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.add_space(ui.available_height() * 0.15); // push content down a bit
+
+                egui::Frame::NONE.show(ui, |ui| {
+                    ui.set_max_width(600.0); // keeps UI from stretching too wide
+
+                    match self.screen {
+                        Screen::Menu => crate::screens::menu::ui(ui, &mut self.screen),
+                        Screen::Test => {
+                            crate::screens::test::ui(ui, &mut self.screen, &mut self.test)
+                        }
+                        Screen::History => crate::screens::history::ui(ui, &mut self.screen),
+                        Screen::Options => {
+                            crate::screens::options::ui(ui, &mut self.screen, &mut self.settings)
+                        }
+                    }
+                });
+            });
         });
     }
 }

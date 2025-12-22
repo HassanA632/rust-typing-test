@@ -7,13 +7,12 @@ use crate::core::{
 };
 
 pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
-    // Create a session the first time we enter this screen
-    let s = session.get_or_insert_with(|| TestSession::new(words::generate_prompt(5)));
+    let s = session.get_or_insert_with(|| TestSession::new(words::generate_prompt(30)));
 
     ui.heading("Typing Test");
     ui.separator();
 
-    // Preview next 6 words
+    // Preview next words
     let preview = s.next_preview(6).join(" ");
     ui.label(preview);
 
@@ -70,15 +69,38 @@ pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
 
     ui.separator();
 
-    ui.horizontal(|ui| {
-        if ui.button("Restart").clicked() {
-            *session = None; // drop current run and create new session
-            return;
+    let button_h = ui.spacing().interact_size.y;
+    let restart_w = 90.0;
+    let exit_w = 60.0;
+    let gap = 10.0;
+    let total_w = restart_w + gap + exit_w;
+
+    let available = ui.available_rect_before_wrap();
+    let x = available.center().x - total_w / 2.0;
+    let y = ui.cursor().min.y;
+
+    let rect = egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(total_w, button_h));
+    ui.allocate_ui_at_rect(rect, |ui| {
+        if ui
+            .add_sized([restart_w, button_h], egui::Button::new("Restart"))
+            .clicked()
+        {
+            *session = None;
         }
 
-        if ui.button("Exit").clicked() {
+        ui.add_space(gap);
+
+        if ui
+            .add_sized([exit_w, button_h], egui::Button::new("Exit"))
+            .clicked()
+        {
             *screen = Screen::Menu;
             *session = None;
         }
     });
+
+    // If restart was clicked, stop drawing the rest of this frame.
+    if session.is_none() {
+        return;
+    }
 }

@@ -82,7 +82,7 @@ impl TestSession {
             }
             true
         } else {
-            // Wrong: reset input and force retry
+            // Wrong = reset input and force retry
             self.last_feedback = Some("Try again".to_string());
             self.input.clear();
             false
