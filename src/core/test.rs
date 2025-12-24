@@ -18,6 +18,7 @@ pub struct TestSession {
     pub correct_words: usize,
     pub last_feedback: Option<String>,
     pub should_focus_input: bool,
+    pub result_saved: bool,
 }
 
 impl TestSession {
@@ -32,6 +33,7 @@ impl TestSession {
             correct_words: 0,
             last_feedback: None,
             should_focus_input: true,
+            result_saved: false,
         }
     }
 

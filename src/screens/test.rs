@@ -2,12 +2,19 @@ use egui::text::LayoutJob;
 use egui::{Align, Color32, FontId, Key, TextEdit, TextFormat, TextStyle, Ui};
 
 use crate::app::Screen;
+use crate::core::history::ResultEntry;
+use crate::core::storage;
 use crate::core::{
     test::{TestSession, TestState},
     words,
 };
 
-pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
+pub fn ui(
+    ui: &mut Ui,
+    screen: &mut Screen,
+    session: &mut Option<TestSession>,
+    results: &mut Vec<crate::core::history::ResultEntry>,
+) {
     let s = session.get_or_insert_with(|| TestSession::new(words::generate_prompt(30)));
 
     ui.heading("Typing Test");
@@ -99,6 +106,21 @@ pub fn ui(ui: &mut Ui, screen: &mut Screen, session: &mut Option<TestSession>) {
 
     // Finished state
     if s.state == TestState::Finished {
+        if !s.result_saved {
+            let wpm = s.wpm().unwrap_or(0.0);
+            let elapsed_secs = s.elapsed().map(|d| d.as_secs_f32()).unwrap_or(0.0);
+
+            results.push(ResultEntry {
+                wpm,
+                elapsed_secs,
+                correct_words: s.correct_words as u32,
+                total_words: s.words.len() as u32,
+            });
+
+            storage::save_results(results);
+            s.result_saved = true;
+        }
+
         ui.separator();
         let wpm = s.wpm().unwrap_or(0.0);
         ui.heading(format!("Done! WPM: {:.1}", wpm));

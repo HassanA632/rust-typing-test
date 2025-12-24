@@ -4,6 +4,7 @@
 //! implementation. Individual screen UIs live in `src/screens/*` so the UI code stays
 //! modular while sharing a single app state.
 //!
+use crate::core::history::ResultEntry;
 use crate::core::settings::{Settings, Theme};
 use crate::core::storage;
 use crate::core::test::TestSession;
@@ -19,15 +20,18 @@ pub struct TypingApp {
     screen: Screen,
     settings: Settings,
     test: Option<TestSession>,
+    results: Vec<ResultEntry>,
 }
 
 impl TypingApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         let settings = storage::load_settings();
+        let results = storage::load_results();
         Self {
             screen: Screen::Menu,
             settings,
             test: None,
+            results,
         }
     }
 }
@@ -55,9 +59,12 @@ impl eframe::App for TypingApp {
 
                     match self.screen {
                         Screen::Menu => crate::screens::menu::ui(ui, &mut self.screen),
-                        Screen::Test => {
-                            crate::screens::test::ui(ui, &mut self.screen, &mut self.test)
-                        }
+                        Screen::Test => crate::screens::test::ui(
+                            ui,
+                            &mut self.screen,
+                            &mut self.test,
+                            &mut self.results,
+                        ),
                         Screen::History => crate::screens::history::ui(ui, &mut self.screen),
                         Screen::Options => {
                             crate::screens::options::ui(ui, &mut self.screen, &mut self.settings)
