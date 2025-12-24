@@ -15,7 +15,7 @@ pub fn ui(
     session: &mut Option<TestSession>,
     results: &mut Vec<crate::core::history::ResultEntry>,
 ) {
-    let s = session.get_or_insert_with(|| TestSession::new(words::generate_prompt(30)));
+    let s = session.get_or_insert_with(|| TestSession::new(words::generate_prompt(15)));
 
     ui.heading("Typing Test");
     ui.separator();

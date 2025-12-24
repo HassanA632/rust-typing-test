@@ -65,7 +65,10 @@ impl eframe::App for TypingApp {
                             &mut self.test,
                             &mut self.results,
                         ),
-                        Screen::History => crate::screens::history::ui(ui, &mut self.screen),
+                        Screen::History => {
+                            crate::screens::history::ui(ui, &mut self.screen, &mut self.results)
+                        }
+
                         Screen::Options => {
                             crate::screens::options::ui(ui, &mut self.screen, &mut self.settings)
                         }
