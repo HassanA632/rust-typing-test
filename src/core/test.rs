@@ -8,6 +8,12 @@ pub enum TestState {
     Finished,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TestMode {
+    Normal,
+    Practice,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SubmitEvent {
     None,
@@ -28,10 +34,11 @@ pub struct TestSession {
     pub should_focus_input: bool,
     pub result_saved: bool,
     pub current_word_had_mistake: bool,
+    pub mode: TestMode,
 }
 
 impl TestSession {
-    pub fn new(words: Vec<String>) -> Self {
+    pub fn new(words: Vec<String>, mode: TestMode) -> Self {
         Self {
             words,
             current_index: 0,
@@ -44,6 +51,7 @@ impl TestSession {
             should_focus_input: true,
             result_saved: false,
             current_word_had_mistake: false,
+            mode,
         }
     }
 

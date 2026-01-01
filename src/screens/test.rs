@@ -7,7 +7,7 @@ use crate::core::storage;
 use crate::core::test::SubmitEvent;
 use crate::core::weak_words::{self, WeakWords};
 use crate::core::{
-    test::{TestSession, TestState},
+    test::{TestMode, TestSession, TestState},
     words,
 };
 
@@ -17,8 +17,15 @@ pub fn ui(
     session: &mut Option<TestSession>,
     results: &mut Vec<ResultEntry>,
     weak_words_map: &mut WeakWords,
+    mode: TestMode,
 ) {
-    let s = session.get_or_insert_with(|| TestSession::new(words::generate_prompt(15)));
+    let s = session.get_or_insert_with(|| {
+        let prompt = match mode {
+            TestMode::Normal => words::generate_prompt(30),
+            TestMode::Practice => words::generate_practice_prompt(30, weak_words_map),
+        };
+        TestSession::new(prompt, mode)
+    });
 
     ui.heading("Typing Test");
     ui.separator();

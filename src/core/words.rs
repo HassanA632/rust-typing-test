@@ -1,4 +1,5 @@
-use rand::prelude::IndexedRandom;
+use crate::core::weak_words::WeakWords;
+use rand::{Rng, prelude::IndexedRandom};
 use std::sync::OnceLock;
 
 static WORDS: OnceLock<Vec<String>> = OnceLock::new();
@@ -31,5 +32,34 @@ pub fn generate_prompt(count: usize) -> Vec<String> {
 
     (0..count)
         .map(|_| words.choose(&mut rng).expect("word list empty").clone())
+        .collect()
+}
+
+pub fn generate_practice_prompt(count: usize, weak: &WeakWords) -> Vec<String> {
+    let all = load_words();
+    assert!(!all.is_empty(), "Word list empty");
+
+    // Build a weighted pool of weak words
+    let mut weak_pool: Vec<&str> = Vec::new();
+    for (w, score) in weak.iter() {
+        if *score > 0 {
+            for _ in 0..*score {
+                weak_pool.push(w.as_str());
+            }
+        }
+    }
+
+    let mut rng = rand::rng();
+    let have_weak = !weak_pool.is_empty();
+
+    (0..count)
+        .map(|_| {
+            let pick_weak = have_weak && rng.random_bool(0.7); // 70% weak words
+            if pick_weak {
+                weak_pool.choose(&mut rng).unwrap().to_string()
+            } else {
+                all.choose(&mut rng).unwrap().clone()
+            }
+        })
         .collect()
 }

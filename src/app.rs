@@ -7,12 +7,13 @@
 use crate::core::history::ResultEntry;
 use crate::core::settings::{Settings, Theme};
 use crate::core::storage;
+use crate::core::test::TestMode;
 use crate::core::test::TestSession;
 use crate::core::weak_words::WeakWords;
 
 pub enum Screen {
     Menu,
-    Test,
+    Test(TestMode),
     History,
     Options,
 }
@@ -23,6 +24,7 @@ pub struct TypingApp {
     test: Option<TestSession>,
     results: Vec<ResultEntry>,
     weak_words: WeakWords,
+    pending_mode: Option<TestMode>,
 }
 
 impl TypingApp {
@@ -37,6 +39,7 @@ impl TypingApp {
             test: None,
             results,
             weak_words,
+            pending_mode: None,
         }
     }
 }
@@ -64,12 +67,13 @@ impl eframe::App for TypingApp {
 
                     match self.screen {
                         Screen::Menu => crate::screens::menu::ui(ui, &mut self.screen),
-                        Screen::Test => crate::screens::test::ui(
+                        Screen::Test(mode) => crate::screens::test::ui(
                             ui,
                             &mut self.screen,
                             &mut self.test,
                             &mut self.results,
                             &mut self.weak_words,
+                            mode,
                         ),
                         Screen::History => {
                             crate::screens::history::ui(ui, &mut self.screen, &mut self.results)
