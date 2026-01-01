@@ -10,7 +10,6 @@ fn load_words() -> &'static Vec<String> {
         let mut words: Vec<String> = raw
             .lines()
             .map(|w| w.trim().to_lowercase())
-            .filter(|w| w.len() > 1)
             .filter(|w| !w.is_empty())
             .collect();
 

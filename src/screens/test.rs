@@ -4,6 +4,8 @@ use egui::{Align, Color32, FontId, Key, TextEdit, TextFormat, TextStyle, Ui};
 use crate::app::Screen;
 use crate::core::history::ResultEntry;
 use crate::core::storage;
+use crate::core::test::SubmitEvent;
+use crate::core::weak_words::{self, WeakWords};
 use crate::core::{
     test::{TestSession, TestState},
     words,
@@ -13,7 +15,8 @@ pub fn ui(
     ui: &mut Ui,
     screen: &mut Screen,
     session: &mut Option<TestSession>,
-    results: &mut Vec<crate::core::history::ResultEntry>,
+    results: &mut Vec<ResultEntry>,
+    weak_words_map: &mut WeakWords,
 ) {
     let s = session.get_or_insert_with(|| TestSession::new(words::generate_prompt(15)));
 
@@ -93,7 +96,17 @@ pub fn ui(
 
     // Submit only when the input is focused
     if response.has_focus() && ui.input(|i| i.key_pressed(Key::Space)) {
-        s.attempt_submit_current_word();
+        match s.attempt_submit_current_word() {
+            SubmitEvent::Wrong { expected } => {
+                weak_words::bump_word(weak_words_map, &expected);
+                storage::save_weak_words(weak_words_map);
+            }
+            SubmitEvent::CorrectFirstTry { expected } => {
+                weak_words::reward_clean_correct(weak_words_map, &expected);
+                storage::save_weak_words(weak_words_map);
+            }
+            SubmitEvent::CorrectAfterMistake { .. } | SubmitEvent::None => {}
+        }
     }
 
     ui.add_space(8.0);

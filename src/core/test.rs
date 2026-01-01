@@ -8,6 +8,14 @@ pub enum TestState {
     Finished,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SubmitEvent {
+    None,
+    Wrong { expected: String },
+    CorrectFirstTry { expected: String },
+    CorrectAfterMistake { expected: String },
+}
+
 pub struct TestSession {
     pub words: Vec<String>,
     pub current_index: usize,
@@ -19,6 +27,7 @@ pub struct TestSession {
     pub last_feedback: Option<String>,
     pub should_focus_input: bool,
     pub result_saved: bool,
+    pub current_word_had_mistake: bool,
 }
 
 impl TestSession {
@@ -34,6 +43,7 @@ impl TestSession {
             last_feedback: None,
             should_focus_input: true,
             result_saved: false,
+            current_word_had_mistake: false,
         }
     }
 
@@ -57,37 +67,51 @@ impl TestSession {
         }
     }
 
-    pub fn attempt_submit_current_word(&mut self) -> bool {
+    pub fn attempt_submit_current_word(&mut self) -> SubmitEvent {
         if self.state == TestState::Waiting || self.state == TestState::Finished {
-            return false;
+            return SubmitEvent::None;
         }
 
-        let expected = self.expected_word().unwrap_or("");
+        let expected = self.expected_word().unwrap_or("").to_string();
         let typed = self.input.trim();
 
         // Don't allow submitting empty (prevents accidental space spam)
         if typed.is_empty() {
             self.last_feedback = Some("Type the word above".to_string());
-            return false;
+            return SubmitEvent::None;
         }
 
         if typed == expected {
             self.correct_words += 1;
             self.last_feedback = None;
 
+            // Decide whether this was clean or after a mistake
+            let event = if self.current_word_had_mistake {
+                SubmitEvent::CorrectAfterMistake {
+                    expected: expected.clone(),
+                }
+            } else {
+                SubmitEvent::CorrectFirstTry {
+                    expected: expected.clone(),
+                }
+            };
+
             self.input.clear();
             self.current_index += 1;
+            self.current_word_had_mistake = false; // reset for the next word
 
             if self.current_index >= self.words.len() {
                 self.state = TestState::Finished;
                 self.finished_at = Some(Instant::now());
             }
-            true
+
+            event
         } else {
             // Wrong = reset input and force retry
             self.last_feedback = Some("Try again".to_string());
             self.input.clear();
-            false
+            self.current_word_had_mistake = true; // mark that this word had a mistake
+            SubmitEvent::Wrong { expected }
         }
     }
 
