@@ -1,15 +1,36 @@
 use rand::prelude::IndexedRandom;
+use std::sync::OnceLock;
 
-static WORDS: &[&str] = &[
-    "the", "of", "and", "to", "a", "in", "is", "you", "that", "it", "he", "was", "for", "on",
-    "are", "as", "with", "his", "they",
-    "i",
-    // we’ll replace this with the full top-400 list next commit
-];
+static WORDS: OnceLock<Vec<String>> = OnceLock::new();
+
+fn load_words() -> &'static Vec<String> {
+    WORDS.get_or_init(|| {
+        let raw = include_str!("../../assets/top500_words.txt");
+
+        let mut words: Vec<String> = raw
+            .lines()
+            .map(|w| w.trim().to_lowercase())
+            .filter(|w| w.len() > 1)
+            .filter(|w| !w.is_empty())
+            .collect();
+
+        // remove dupes while preserving order
+        words.dedup();
+
+        words
+    })
+}
 
 pub fn generate_prompt(count: usize) -> Vec<String> {
+    let words = load_words();
+    assert!(
+        !words.is_empty(),
+        "Word list is empty. Check assets/top500_words.txt"
+    );
+
     let mut rng = rand::rng();
+
     (0..count)
-        .map(|_| WORDS.choose(&mut rng).unwrap().to_string())
+        .map(|_| words.choose(&mut rng).expect("word list empty").clone())
         .collect()
 }
